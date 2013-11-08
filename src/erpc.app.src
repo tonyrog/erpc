@@ -1,0 +1,7 @@
+{application, erpc,
+ [{description, "ONC RPC client & server library, XDR library"},
+  {vsn, git},
+  {registered, []},
+  {applications, [kernel, stdlib]}
+ ]
+}.
