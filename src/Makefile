@@ -10,19 +10,19 @@ clean:
 	rm -f $(OBJECTS) pmap_xdr.erl pmap.hrl pmap_clnt.erl rpc.hrl rpc_xdr.erl
 
 pmap_xdr.erl: pmap.x
-	erpcgen -a '[xdr]' pmap
+	erpcgen -xdr pmap.x
 
 pmap.hrl: pmap.x
-	erpcgen -a '[hrl]' pmap
+	erpcgen -hrl pmap.x
 
 pmap_clnt.erl: pmap.hrl pmap.x
-	erpcgen -a '[clnt]' pmap
+	erpcgen -clnt pmap.x
 
 rpc.hrl: rpc.x
-	erpcgen -a '[hrl]' rpc
+	erpcgen -hrl rpc.x
 
 rpc_xdr.erl: rpc.x
-	erpcgen -a '[xdr]' rpc
+	erpcgen -xdr rpc.x
 
 $(EBIN)/rpc_server.beam: rpc.hrl
 $(EBIN)/rpc_client.beam: rpc.hrl
