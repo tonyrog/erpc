@@ -235,6 +235,9 @@ handle_msg(Msg, Sock, Addr, S) ->
 	{accepted, {Status, Bytes, NState}, Clnt} ->
 	    do_reply(Status, Bytes, Clnt),
 	    S#state{state = NState};
+	{accepted, Clnt, Status} ->
+	    do_reply(Status, <<>>, Clnt),
+	    S;
 	{rejected, Clnt, RejectBody, NState} ->
 	    Reply = {Clnt#client.xid, {'REPLY', {'MSG_DENIED', RejectBody}}},
 	    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)),
@@ -279,18 +282,18 @@ do_reply(garbage_args, _, Clnt) ->
     send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply));
 do_reply(error, _, Clnt) ->
     Reply = accepted(Clnt, {'SYSTEM_ERR', void}),
+    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply));
+do_reply(Status, _, Clnt) ->
+    Reply = accepted(Clnt, Status),
     send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)).
     
 accepted(C, AcceptBody) ->
     {C#client.xid, {'REPLY', {'MSG_ACCEPTED', {C#client.rverf, AcceptBody}}}}.
-    
-
 
 %% we support RPC version 2 only.
 chk_rpc_vsn(?RPC_VERSION_2, _Clnt) -> ok;
-chk_rpc_vsn(_, Clnt) -> throw({rejected, Clnt,
-			      {'RPC_MISMATCH',
-			       {?RPC_VERSION_2, ?RPC_VERSION_2}}}).
+chk_rpc_vsn(_, Clnt) -> 
+    throw({rejected, Clnt,{'RPC_MISMATCH',{?RPC_VERSION_2, ?RPC_VERSION_2}}}).
 
 %% we should implement a more flexible authentication scheme...
 chk_auth({'AUTH_NONE', _}, {'AUTH_NONE', _}, Clnt) ->
