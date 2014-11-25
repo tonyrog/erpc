@@ -237,7 +237,7 @@ init([Host, Program, Version, Proto, Port]) ->
 %%----------------------------------------------------------------------
 
 terminate(Reason, #state{proto = Proto, socket=Socket,
-			 pending=Pending }) ->
+			 pending=Pending, pendinglen = _PendingLen}) ->
     F = fun (#pending{from=From}) ->
 		gen_server:reply(From, {error, Reason})
 	end,
@@ -424,7 +424,7 @@ make_call1(From, Size, Call, Timeout, S, Procedure) when S#state.proto == tcp ->
     end;
 
 make_call1(From, Size, Call, Timeout, S, Procedure) when S#state.proto == udp ->
-    io:format("~p\n", [list_to_binary([Call])]),
+    % io:format("~p\n", [list_to_binary([Call])]),
     case gen_udp:send(S#state.socket, Call) of
 	ok ->
 	    Timer = erlang:send_after(S#state.retry_timeout, self(),
@@ -475,7 +475,7 @@ reply(Record, State) ->
     Pending = State#state.pending,
     case keysearchdel(Xid, #pending.xid, Pending) of
 	{P, Rest} ->
-	    lists:foreach({erlang, cancel_timer}, P#pending.timers),
+        lists:foreach(fun erlang:cancel_timer/1, P#pending.timers),
 	    Reply = make_reply(Record, State),
 	    gen_server:reply(P#pending.from, Reply),
 	    Stats = State#state.statistics,
